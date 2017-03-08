@@ -1,5 +1,10 @@
 <?php
 
+  /**
+   * opens connection to database
+   * 
+   * @return \PDO
+   */
   function OpenConnection() 
   {
     // db.inc includes the database connection info on a file located in folder not accessible through http
@@ -17,6 +22,14 @@
     return $pdo;
   }
   
+  /**
+   * A brute force search method. Takes the search terms as input, splits them into each individual word
+   * and then compares every word with every column in the prof table and returns
+   * any rows that match in part. 
+   * 
+   * @param string $searchTerms   the word/phrase to search the table
+   * @return string               html table with the results of the sql query
+   */
   function SearchFor($searchTerms)
   {
     try {
@@ -55,9 +68,15 @@
     }
   }
   
+  /**
+   * 
+   * @param array $data   the raw results from the database
+   * @return string       the table with results formated in it
+   */
   function BuildResultsTable($data)
   {
-    $output .= "<br><table style='border-collapse: collapse; width: 300px; margin-left: auto; margin-right: auto; border-top-right-radius: 3em;'><tr class='RoundedTop RedRow' ><td>First Name</td><td>Last Name</td><td>Institution</td><td>Department</td><td>Phone</td><td>E-Mail</td><td>Webpage</td></tr>";
+    $output .= "<table>"
+            . "<thead><tr class='RedRow'><th>First Name</th><th>Last Name</th><th>Institution</th><th>Department</th><th>Phone</th><th>E-Mail</th><th>Webpage</th></tr></thead><tbody>";
     foreach($data as $row) {
       $output .= "<tr><td>" . $row["firstName"]. "</td>";
       $output .= "<td>" . $row["lastName"]. "</td>";
@@ -68,11 +87,10 @@
       $output .= "<td>" . $row["webpage"]. "</td></tr>";
     }
     
-    $output .= "</table>";
+    $output .= "</tbody></table>";
+    
+    return $output;
   }
-
-
-
 ?>
 <!DOCTYPE html>
 <!--
@@ -81,37 +99,35 @@ To change this template file, choose Tools | Templates
 and open the template in the editor.
 -->
 <html>
-	<head>
-		<meta charset="UTF-8">
-		<title></title>
-		<link rel="stylesheet" href="styles/css/style.css">
-	</head>
-	<body>
-		<form method="post" name="search">
-		<table style="border-collapse: collapse; width: 300px; margin-left: auto; margin-right: auto; border-top-right-radius: 3em;">
-      <tr >
-        <td class="RoundedTop RedRow" style=""  colspan="2">Sample</td>
-      </tr> 
-      <tr class="WhiteRow" style='border-left: #000 thin solid; border-right: #000 thin solid;'>
-        <td class="Centered">Search:</td>
-				<td><input type="text" name="searchTerm"></td>
-      </tr>
-      <tr class="WhiteRow" style='border-left: #000 thin solid; border-right: #000 thin solid;'>
-        <td class="Centered" colspan="2"><input type="submit" name="submit" value="Search"></td>
-      </tr>
-      
-      </tr>
-      <tr><td class="Bottom RedRow" colspan="2"></td></tr>
-    </table>
-		</form>
-
-		<?php
-		$searchTerms = "";
-		if ($_POST)
-		{
-                  $searchTerms = $_POST["searchTerm"];
-		}
-		echo SearchFor($searchTerms);
-		?>
-	</body>
+  <head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel='stylesheet' href='/common/css/bootstrap/bootstrap.css'></link>
+    <link rel='stylesheet' href='/common/css/jquery/jquery-ui.css'></link>
+    
+    <script src='/common/js/jquery/jquery-3.1.1.js'></script>
+    <script src="/common/js/bootstrap/bootstrap.js"></script>
+  </head>
+  <body>
+    <span class="text-center">
+      <form class="form-inline" role="search" method="post" name="search">
+        <div class="form-group">
+          <label for="searchTerm">Search For:</label>
+          <input type="text" class="form-control" placeholder="Search" name="searchTerm">
+          <button type="submit" class="btn btn-default">Submit</button>
+        </div>
+      </form>
+    </span>
+    <div style="white-space: nowrap; overflow-x: auto;">
+      <?php
+        $searchTerms = "";
+        if ($_POST)
+        {
+          $searchTerms = $_POST["searchTerm"];
+        }
+        echo SearchFor($searchTerms);
+      ?>
+    </div>
+  </body>
 </html>

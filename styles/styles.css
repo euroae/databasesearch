@@ -1,0 +1,39 @@
+/*
+*/
+/* 
+    Created on : Mar 8, 2017, 12:12:47 PM
+    Author     : filipe medeiros
+*/
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    width: 80%;
+    border: 1px solid #ddd;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+th, td {
+    border: none;
+    text-align: left;
+    padding: 8px;
+    min-width: 100px;
+}
+
+span {
+  padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+.RedRow {
+  background: #e31836;
+  color: #fff;
+}
+
+.center {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
