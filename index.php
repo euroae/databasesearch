@@ -5,7 +5,7 @@
    * 
    * @return \PDO
    */
-  function OpenConnection() 
+  function openConnection() 
   {
     // db.inc includes the database connection info on a file located in folder not accessible through http
     include '/db.inc';
@@ -23,6 +23,31 @@
   }
   
   /**
+   * Get the names of all the columns we wish to print onto table.
+   * Modify the prepare statement to leave out any columns you don't want printed
+   * 
+   * @return array    array of column names.
+   */
+  function getColumnNames() {
+    try {
+      // open sql connection
+      $pdo = openConnection();
+      
+      //prepare and execute statement
+      $stmt = $pdo->prepare('SELECT column_name FROM information_schema.columns WHERE table_schema=? AND table_name=? AND NOT (column_name like "%index%" OR column_name like "%id");');
+      $stmt->bindValue(1, "JapaneseData");
+      $stmt->bindValue(2, "prof");
+      
+      //execute and collect output
+      $stmt->execute();
+      return $stmt->fetchAll();
+      
+    } catch(PDOException $e) {
+      echo "Error: " . $e->getMessage(); 
+    }
+  }
+  
+  /**
    * A brute force search method. Takes the search terms as input, splits them into each individual word
    * and then compares every word with every column in the prof table and returns
    * any rows that match in part. 
@@ -30,18 +55,17 @@
    * @param string $searchTerms   the word/phrase to search the table
    * @return string               html table with the results of the sql query
    */
-  function SearchFor($searchTerms)
-  {
+  function searchFor($searchTerms) {
     try {
       // open sql connection
-      $pdo = OpenConnection();
+      $pdo = openConnection();
       
       // Split the input into it's seperate terms
       $split = explode(" ", $searchTerms);
 
       // Create an array with bindings for each values and search field
       foreach($split as $addBind) {
-        $pieces[] = '(`firstName` LIKE concat(\'%\', ?, \'%\') OR `lastName` LIKE concat(\'%\', ?, \'%\') OR `institution` LIKE concat(\'%\', ?, \'%\') OR`department` LIKE concat(\'%\', ?, \'%\') OR `phone` LIKE concat(\'%\', ?, \'%\') OR `email` LIKE concat(\'%\', ?, \'%\') OR `webpage` LIKE concat(\'%\', ?, \'%\'))';
+        $pieces[] = '(`first_name` LIKE concat(\'%\', ?, \'%\') OR `last_name` LIKE concat(\'%\', ?, \'%\') OR `institution` LIKE concat(\'%\', ?, \'%\') OR`department` LIKE concat(\'%\', ?, \'%\') OR `phone` LIKE concat(\'%\', ?, \'%\') OR `e-mail` LIKE concat(\'%\', ?, \'%\') OR `webpage` LIKE concat(\'%\', ?, \'%\'))';
       }
       
       //prepare statement
@@ -62,7 +86,7 @@
       $results = $stmt->fetchAll();
     
       //return table view if there are results, else just return no results message
-      return (count($results) > 0) ? BuildResultsTable($results) : "0 Results";
+      return (count($results) > 0) ? buildResultsTable($results) : "0 Results";
     } catch(PDOException $e) {
       echo "Error: " . $e->getMessage(); 
     }
@@ -73,18 +97,29 @@
    * @param array $data   the raw results from the database
    * @return string       the table with results formated in it
    */
-  function BuildResultsTable($data)
+  function buildResultsTable($data)
   {
-    $output .= "<table>"
-            . "<thead><tr class='RedRow'><th>First Name</th><th>Last Name</th><th>Institution</th><th>Department</th><th>Phone</th><th>E-Mail</th><th>Webpage</th></tr></thead><tbody>";
+    $columns = getColumnNames();
+    $columnCount = count($columns);
+    
+    // create header rows
+    $output .= "<table><thead><tr class='RedRow'>";
+    
+    // dynamically create header based on table
+    for($x =0; $x < $columnCount; $x++) {
+      $text = ucwords(str_replace("_", " ", $columns[$x]["column_name"]));
+      $output .= "<th>$text</th>";
+    }
+    $output .= "</tr></thead><tbody>";
+    
+    // dynamically print based on table
     foreach($data as $row) {
-      $output .= "<tr><td>" . $row["firstName"]. "</td>";
-      $output .= "<td>" . $row["lastName"]. "</td>";
-      $output .= "<td>" . $row["institution"]. "</td>";
-      $output .= "<td>" . $row["department"]. "</td>";
-      $output .= "<td>" . $row["phone"]. "</td>";
-      $output .= "<td>" . $row["email"]. "</td>";
-      $output .= "<td>" . $row["webpage"]. "</td></tr>";
+      $output .= "<tr>";
+      for($x =0; $x < $columnCount; $x++) {
+	$text = $row[$columns[$x]["column_name"]];
+	$output .= "<td>$text</td>";
+      }
+      $output .= "</tr>";
     }
     
     $output .= "</tbody></table>";
@@ -128,7 +163,7 @@ and open the template in the editor.
         {
           $searchTerms = $_POST["searchTerm"];
         }
-        echo SearchFor($searchTerms);
+        echo searchFor($searchTerms);
       ?>
     </div>
   </body>
